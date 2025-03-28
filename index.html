@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>刺身審判機 Sashimi Judgment Engine</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white font-mono flex flex-col items-center justify-center min-h-screen p-6">
+
+  <h1 class="text-4xl font-bold text-amber-400 mb-4">⚖️ 刺身審判機</h1>
+  <p class="mb-6 text-lg text-gray-300">輸入食客與吃法，審判他們的靈魂是否忠於刺身之道！</p>
+
+  <textarea id="inputArea" rows="8" class="w-full max-w-2xl p-4 text-black rounded-lg" placeholder='[
+  { "name": "阿翔", "sashimiStyle": "raw" },
+  { "name": "小美", "sashimiStyle": "炙燒" },
+  { "name": "阿強", "sashimiStyle": "滾湯煮到崩潰" }
+]'></textarea>
+
+  <button onclick="startJudgment()" class="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-full shadow-lg text-lg">
+    啟動審判 🔥
+  </button>
+
+  <div id="result" class="mt-8 w-full max-w-2xl bg-gray-800 p-4 rounded-lg shadow-inner whitespace-pre-wrap"></div>
+
+  <script>
+    const COSMIC_LAW = Object.freeze({
+      TRUE_SASHIMI_SOULS: ["raw", "生吃", "炙燒"],
+      EXILED_SOULS: ["滾湯", "煮", "泡味噌湯", "全熟"],
+    });
+
+    function judgeSashimiSoul(diner) {
+      const style = diner.sashimiStyle;
+      const name = diner.name;
+
+      if (COSMIC_LAW.TRUE_SASHIMI_SOULS.some(aura => style.includes(aura))) {
+        return `🗡️【${name}】：你是刺身道的守護者，靈魂閃耀著大海之光！🌊`;
+      } else if (COSMIC_LAW.EXILED_SOULS.some(curse => style.includes(curse))) {
+        return `☠️【${name}】：你背叛了魚神之誓，已墜入鍋之煉獄，吾判你…放逐！🔥`;
+      } else {
+        return `🤔【${name}】：你的選擇模糊不清，究竟是中立還是潛伏者…觀察中。👁️`;
+      }
+    }
+
+    function startJudgment() {
+      const input = document.getElementById('inputArea').value;
+      let diners;
+      try {
+        diners = JSON.parse(input);
+      } catch (e) {
+        document.getElementById('result').textContent = "❌ JSON 格式錯誤，請確認輸入格式！";
+        return;
+      }
+
+      let output = "⚖️《刺身審判儀式·開啟》⚖️\n";
+      diners.forEach(d => {
+        output += judgeSashimiSoul(d) + "\n";
+      });
+      output += "⚖️《審判結束，願真魚之道永存》⚖️";
+
+      document.getElementById('result').textContent = output;
+    }
+  </script>
+
+</body>
+</html>
