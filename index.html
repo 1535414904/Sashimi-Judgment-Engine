@@ -4,23 +4,57 @@
   <meta charset="UTF-8">
   <title>刺身審判機 Sashimi Judgment Engine</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: radial-gradient(circle at center, #1f2937 0%, #111827 100%);
+      animation: pulseBG 10s infinite ease-in-out;
+    }
+    @keyframes pulseBG {
+      0%, 100% { background-color: #1f2937; }
+      50% { background-color: #111827; }
+    }
+    .flame {
+      animation: flicker 1s infinite;
+    }
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .eruption {
+      position: absolute;
+      bottom: 150px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      font-size: 4rem;
+      animation: boom 1.2s ease-out forwards;
+    }
+    @keyframes boom {
+      0% { transform: translateX(-50%) scale(0.5) translateY(0); opacity: 0; }
+      50% { transform: translateX(-50%) scale(1.2) translateY(-100px); opacity: 1; }
+      100% { transform: translateX(-50%) scale(1) translateY(-200px); opacity: 0; }
+    }
+  </style>
 </head>
-<body class="bg-gray-900 text-white font-mono flex flex-col items-center justify-center min-h-screen p-6">
+<body class="text-white font-mono flex flex-col items-center justify-center min-h-screen p-6 relative overflow-hidden">
 
-  <h1 class="text-4xl font-bold text-amber-400 mb-4">⚖️ 刺身審判機</h1>
-  <p class="mb-6 text-lg text-gray-300">輸入食客與吃法，審判他們的靈魂是否忠於刺身之道！</p>
+  <h1 class="text-5xl font-extrabold text-red-500 mb-4 flame">⚖️ 刺身審判機</h1>
+  <p class="mb-6 text-lg text-gray-300 text-center">揭開審判之門，判定誰是真正的魚之信徒！</p>
 
-  <textarea id="inputArea" rows="8" class="w-full max-w-2xl p-4 text-black rounded-lg" placeholder='[
+  <textarea id="inputArea" rows="8" class="w-full max-w-2xl p-4 text-black rounded-lg shadow-lg border-2 border-amber-500" placeholder='[
   { "name": "阿翔", "sashimiStyle": "raw" },
   { "name": "小美", "sashimiStyle": "炙燒" },
   { "name": "阿強", "sashimiStyle": "滾湯煮到崩潰" }
 ]'></textarea>
 
-  <button onclick="startJudgment()" class="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-full shadow-lg text-lg">
+  <button onclick="startJudgment()" class="mt-6 px-8 py-3 bg-gradient-to-r from-red-600 to-yellow-500 hover:from-yellow-500 hover:to-red-600 text-black font-bold rounded-full shadow-2xl text-xl transition-transform hover:scale-105">
     啟動審判 🔥
   </button>
 
-  <div id="result" class="mt-8 w-full max-w-2xl bg-gray-800 p-4 rounded-lg shadow-inner whitespace-pre-wrap"></div>
+  <div id="result" class="mt-8 w-full max-w-2xl bg-black/50 p-6 rounded-lg shadow-inner border border-red-400 text-sm whitespace-pre-wrap"></div>
+
+  <!-- 火山噴發動畫 -->
+  <div id="eruption" class="eruption">🌋🐟</div>
 
   <script>
     const COSMIC_LAW = Object.freeze({
@@ -51,6 +85,13 @@
         return;
       }
 
+      // 播放火山動畫
+      const eruption = document.getElementById('eruption');
+      eruption.style.display = 'block';
+      eruption.classList.remove('hidden');
+      eruption.style.animation = 'boom 1.2s ease-out forwards';
+      setTimeout(() => { eruption.style.display = 'none'; }, 1200);
+
       let output = "⚖️《刺身審判儀式·開啟》⚖️\n";
       diners.forEach(d => {
         output += judgeSashimiSoul(d) + "\n";
@@ -60,6 +101,5 @@
       document.getElementById('result').textContent = output;
     }
   </script>
-
 </body>
 </html>
