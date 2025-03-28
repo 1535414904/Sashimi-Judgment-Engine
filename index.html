@@ -9,28 +9,28 @@
       background: radial-gradient(circle at center, #1f2937 0%, #111827 100%);
       animation: pulseBG 10s infinite ease-in-out;
       overflow: hidden;
+      cursor: crosshair;
     }
     @keyframes pulseBG {
       0%, 100% { background-color: #1f2937; }
       50% { background-color: #111827; }
     }
-    .flame {
-      animation: flicker 1s infinite;
-    }
+    .flame { animation: flicker 1s infinite; }
     @keyframes flicker {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.4; }
     }
-    .eruption, .fish, .lava, .mermaid {
+    .eruption, .fish, .lava, .mermaid, .net {
       position: absolute;
       font-size: 3rem;
-      opacity: 0;
+      pointer-events: none;
     }
     .eruption {
       left: 50%;
       bottom: 150px;
       transform: translateX(-50%);
       font-size: 8rem;
+      opacity: 0;
     }
     @keyframes eruptVolcano {
       0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
@@ -38,26 +38,27 @@
       100% { transform: translateX(-50%) scale(1.5); opacity: 0; }
     }
     .fish {
-      animation: swimUp 2s ease-out forwards;
+      animation: swimUp 6s linear forwards;
     }
     .lava {
       font-size: 2rem;
       color: orange;
-      animation: riseLava 1.5s ease-out forwards;
+      animation: swimUp 6s linear forwards;
     }
     .mermaid {
       font-size: 4rem;
-      animation: riseMermaid 2.5s ease-out forwards;
+      animation: riseMermaid 6s linear forwards;
+    }
+    .net {
+      font-size: 4rem;
+      opacity: 1;
+      z-index: 100;
+      transition: transform 0.1s ease;
     }
     @keyframes swimUp {
       0% { transform: translateY(0); opacity: 0; }
-      30% { opacity: 1; }
+      10% { opacity: 1; }
       100% { transform: translateY(-120vh); opacity: 0; }
-    }
-    @keyframes riseLava {
-      0% { transform: translateY(0); opacity: 0; }
-      50% { opacity: 1; }
-      100% { transform: translateY(-300px); opacity: 0; }
     }
     @keyframes riseMermaid {
       0% { transform: translateY(100px); opacity: 0; }
@@ -69,45 +70,61 @@
 <body class="text-white font-mono flex flex-col items-center justify-center min-h-screen p-6 relative">
 
   <h1 class="text-5xl font-extrabold text-red-500 mb-4 flame">⚖️ 刺身審判機</h1>
-  <p class="mb-6 text-lg text-gray-300 text-center">點擊啟動審判，讓火山、岩漿、魚與美人魚引爆整個畫面！</p>
+  <p class="mb-2 text-lg text-gray-300 text-center">點擊啟動審判，然後用網撈魚（+1），小心不要碰到岩漿（-1）！</p>
+  <div class="mb-4 text-xl font-bold text-green-400" id="score">得分：0</div>
 
-  <button onclick="startJudgment()" class="mt-6 px-8 py-3 bg-gradient-to-r from-red-600 to-yellow-500 hover:from-yellow-500 hover:to-red-600 text-black font-bold rounded-full shadow-2xl text-xl transition-transform hover:scale-105">
+  <button onclick="startJudgment()" class="mt-2 px-8 py-3 bg-gradient-to-r from-red-600 to-yellow-500 hover:from-yellow-500 hover:to-red-600 text-black font-bold rounded-full shadow-2xl text-xl transition-transform hover:scale-105">
     啟動審判 🔥
   </button>
 
-  <div id="result" class="mt-8 w-full max-w-2xl bg-black/50 p-6 rounded-lg shadow-inner border border-red-400 text-sm whitespace-pre-wrap"></div>
+  <div id="result" class="mt-4 w-full max-w-2xl bg-black/50 p-6 rounded-lg shadow-inner border border-red-400 text-sm whitespace-pre-wrap"></div>
 
   <div id="eruption" class="eruption">🌋</div>
   <div id="lava-container"></div>
   <div id="mermaid-container"></div>
+  <div id="net" class="net">🎣</div>
   <audio id="sfx" src="https://cdn.pixabay.com/audio/2022/08/10/audio_1212baae39.mp3"></audio>
 
   <script>
-    function spawnFishExplosion(count = 50) {
-      for (let i = 0; i < count; i++) {
-        const fish = document.createElement('div');
-        fish.textContent = '🐟';
-        fish.className = 'fish';
-        fish.style.left = `${Math.random() * 100}%`;
-        fish.style.bottom = '150px';
-        fish.style.animationDelay = `${Math.random() * 0.8}s`;
-        fish.style.zIndex = '50';
-        document.body.appendChild(fish);
-        setTimeout(() => fish.remove(), 2200);
-      }
+    const net = document.getElementById('net');
+    const scoreEl = document.getElementById('score');
+    let score = 0;
+
+    document.addEventListener('mousemove', e => {
+      net.style.left = `${e.clientX - 30}px`;
+      net.style.top = `${e.clientY - 30}px`;
+      checkCatch(e.clientX, e.clientY);
+    });
+
+    function checkCatch(x, y) {
+      document.querySelectorAll('.fish, .lava').forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < y && y < rect.bottom && rect.left < x && x < rect.right) {
+          if (el.classList.contains('fish')) {
+            score++;
+            el.remove();
+          } else if (el.classList.contains('lava')) {
+            score--;
+            el.remove();
+          }
+          scoreEl.textContent = `得分：${score}`;
+        }
+      });
     }
 
-    function spawnLava(count = 20) {
-      const container = document.getElementById('lava-container');
+    function spawnEntities(type, count) {
+      const container = type === 'lava' ? document.getElementById('lava-container') : document.body;
       for (let i = 0; i < count; i++) {
-        const lava = document.createElement('div');
-        lava.textContent = '🟠';
-        lava.className = 'lava';
-        lava.style.left = `${Math.random() * 100}%`;
-        lava.style.bottom = '160px';
-        lava.style.animationDelay = `${Math.random() * 0.5}s`;
-        container.appendChild(lava);
-        setTimeout(() => lava.remove(), 1800);
+        const el = document.createElement('div');
+        el.textContent = type === 'lava' ? '🟠' : '🐟';
+        el.className = type;
+        el.style.left = `${Math.random() * 100}%`;
+        el.style.bottom = '150px';
+        el.style.animationDelay = `${Math.random() * 1.5}s`;
+        el.style.zIndex = '50';
+        el.style.opacity = '1';
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 6500);
       }
     }
 
@@ -118,20 +135,23 @@
       mermaid.className = 'mermaid';
       mermaid.style.left = `${50 + Math.random() * 20 - 10}%`;
       mermaid.style.bottom = '120px';
+      mermaid.style.opacity = '1';
       container.appendChild(mermaid);
-      setTimeout(() => mermaid.remove(), 2500);
+      setTimeout(() => mermaid.remove(), 7000);
     }
 
     function startJudgment() {
+      score = 0;
+      scoreEl.textContent = `得分：${score}`;
       document.body.classList.add('animate-pulse');
       const eruption = document.getElementById('eruption');
       eruption.style.animation = 'none';
-      void eruption.offsetWidth; // 強制重繪
+      void eruption.offsetWidth;
       eruption.style.animation = 'eruptVolcano 1.5s ease-out forwards';
       document.getElementById('sfx').play();
 
-      spawnLava(30);
-      spawnFishExplosion(80);
+      spawnEntities('lava', 30);
+      spawnEntities('fish', 80);
       spawnMermaid();
 
       const result = document.getElementById('result');
